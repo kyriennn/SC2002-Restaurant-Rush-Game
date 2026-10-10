@@ -1,5 +1,5 @@
 package entities;
 
-public class Customer {
+public abstract class Customer {
     
 }
