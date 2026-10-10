@@ -1,5 +1,8 @@
-package entities;
-
-public class CustomerStatus {
-    
+public enum CustomerStatus {
+    WAITING,
+    SEATED,
+    SERVED,
+    READY_TO_PAY,
+    PAID,
+    LEFT
 }
