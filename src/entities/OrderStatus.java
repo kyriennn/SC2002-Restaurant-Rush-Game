@@ -1,5 +1,7 @@
-package entities;
-
-public class OrderStatus {
-    
+public enum OrderStatus {
+    ORDERED,
+    READY,
+    SERVED,
+    PAID,
+    CANCELLED
 }
