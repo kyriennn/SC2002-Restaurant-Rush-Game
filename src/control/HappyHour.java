@@ -23,7 +23,7 @@ public final class HappyHour {
         return activationTurn >= 1 && turn >= activationTurn && turn < activationTurn + 2;
     }
 
-    // Includes the current turn while Happy Hour is active.
+    // Includes the current turn while Happy Hour is active
     public int getRemainingTurns(int turn) {
         return isActive(turn) ? activationTurn + 2 - turn : 0;
     }
