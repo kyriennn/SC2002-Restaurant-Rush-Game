@@ -11,6 +11,7 @@ public class Restaurant {
     private final List<MenuItem> menu = new ArrayList<>();
 
     private final Waiter waiter;
+    private final Host host;
     private final Chef chef;
     private final Cashier cashier;
 
@@ -25,10 +26,11 @@ public class Restaurant {
             tables.add(new Table(i));
         }
         this.waiter = new Waiter("waiter");
+        this.host = new Host("host");
         this.cashier = new Cashier("cashier");
         this.chef = new Chef("chef");
 
-        menu.addAll(MenuItem.stageOneMenu());
+        menu.addAll(MenuItem.stageThreeMenu());
     }
 
     //query methods
@@ -170,8 +172,12 @@ public class Restaurant {
         return chef;
     }
 
+    public Host getHost() {
+        return host;
+    }
+
     public List<Staff> getAllStaff(){
-        return List.of(waiter, chef, cashier);
+        return List.of(waiter, host, chef, cashier);
     }
 
     //action methods
@@ -188,7 +194,30 @@ public class Restaurant {
         return new ActionResult(true, c.getCustomerId() + " seated at table " + t.getTableNumber());
     }
 
-    public ActionResult takeOrder(Customer c, Random rng, int currentTurn){
+    public ActionResult hostSeatCustomer(Customer c, Table t) {
+        if (!host.canAct()) {
+            return new ActionResult(false, "Host has already seated a customer this turn.");
+        }
+        if (!waitingQueue.contains(c)) {
+            return new ActionResult(false, c.getCustomerId() + " is not in waiting queue.");
+        }
+        if (t.isOccupied()) {
+            return new ActionResult(false, "Table " + t.getTableNumber() + " is already occupied.");
+        }
+
+        waitingQueue.remove(c);
+        host.seatCustomer(c, t);
+        return new ActionResult(
+                true,
+                "Host seated Customer " + c.getCustomerId()
+                        + " at table " + t.getTableNumber());
+    }
+
+    public ActionResult takeOrder(
+            Customer c,
+            Random rng,
+            int currentTurn,
+            HappyHour happyHour) {
         if(c.getStatus() != CustomerStatus.SEATED){
             return new ActionResult(false, "Customer " + c.getCustomerId() + " is not seated yet.");
         }
@@ -197,11 +226,23 @@ public class Restaurant {
         }
         
         MenuItem choice = c.chooseMenuItem(menu, rng);
-        Order order = new Order(c, choice, currentTurn);
+        int customerPrice = c.getPriceCents(choice);
+        int chargedPrice = happyHour.priceForOrder(customerPrice, currentTurn);
+        Order order = new Order(c, choice, currentTurn, chargedPrice);
         c.attachOrder(order);
         activeOrders.add(order);
 
-        return new ActionResult(true, "Customer " + c.getCustomerId() + " has ordered " + choice.getName() + " (" + MoneyFormatter.format(order.getPriceCents()) + ").");
+        String priceMessage = customerPrice == chargedPrice
+                ? MoneyFormatter.format(chargedPrice)
+                : MoneyFormatter.format(customerPrice) + " -> " + MoneyFormatter.format(chargedPrice);
+        return new ActionResult(
+                true,
+                "Customer " + c.getCustomerId() + " has ordered "
+                        + choice.getName() + " (" + priceMessage + ").");
+    }
+
+    public ActionResult takeOrder(Customer c, Random rng, int currentTurn) {
+        return takeOrder(c, rng, currentTurn, new HappyHour());
     }
 
     public ActionResult advanceOrder(Order o, int currentTurn){
@@ -252,5 +293,11 @@ public class Restaurant {
             return true;
         }
         return false;
+    }
+
+    public void recoverWaitingCustomers(int points) {
+        for (Customer c : getCustomersLosingSatisfaction()) {
+            c.recoverSatisfaction(points);
+        }
     }
 }

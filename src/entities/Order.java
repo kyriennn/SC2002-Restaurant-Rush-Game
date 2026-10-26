@@ -40,6 +40,41 @@ public final class Order {
         this(nextGeneratedId(), customer, menuItem, createdTurn);
     }
 
+    public Order(
+            Customer customer,
+            MenuItem menuItem,
+            int createdTurn,
+            int chargedPriceCents) {
+        this(nextGeneratedId(), customer, menuItem, createdTurn, chargedPriceCents);
+    }
+
+    public Order(
+            int orderId,
+            Customer customer,
+            MenuItem menuItem,
+            int createdTurn,
+            int chargedPriceCents) {
+        if (chargedPriceCents < 0) {
+            throw new IllegalArgumentException("charged price cannot be negative");
+        }
+        if (orderId < 1) {
+            throw new IllegalArgumentException("orderId must be positive");
+        }
+        if (createdTurn < 0) {
+            throw new IllegalArgumentException("createdTurn cannot be negative");
+        }
+
+        this.orderId = orderId;
+        generatedIds = Math.max(generatedIds, orderId + 1);
+        this.customer = Objects.requireNonNull(customer, "customer cannot be null");
+        this.menuItem = Objects.requireNonNull(menuItem, "menuItem cannot be null");
+        this.priceCents = chargedPriceCents;
+        this.requiredPreparationUnits = menuItem.getPreparationUnits();
+        this.createdTurn = createdTurn;
+        this.completedPreparationUnits = 0;
+        this.status = OrderStatus.ORDERED;
+    }
+
     static int nextGeneratedId() {
         return generatedIds++;
     }

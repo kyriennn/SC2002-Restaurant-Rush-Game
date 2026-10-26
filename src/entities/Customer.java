@@ -39,9 +39,8 @@ public abstract class Customer {
         return menuItem.getPriceCents();
     }
 
-    /**
+    /*
      * Applies satisfaction loss at end of turn.
-     * Returns true if customer leaves.
      */
     public boolean applyEndOfTurn() {
 
@@ -60,6 +59,16 @@ public abstract class Customer {
         }
 
         return false;
+    }
+
+    public void recoverSatisfaction(int points) {
+        if (points < 0) {
+            throw new IllegalArgumentException("recovery points cannot be negative");
+        }
+        if (status == CustomerStatus.WAITING
+                || status == CustomerStatus.SEATED) {
+            satisfaction = Math.min(100, satisfaction + points);
+        }
     }
 
     public void decreaseSatisfaction() {
