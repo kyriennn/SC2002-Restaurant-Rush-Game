@@ -78,8 +78,6 @@ In the defeat log, the Waiter chose **Wait** for all 18 turns. No customers were
 
 This guide is based on the two Stage 2 sample game logs. Both use **Game seed 42** and 18 turns. The successful log ends in victory with 4 paid customers. The defeat log has the Waiter wait every turn and no dishes are served.
 
-## What is new in Stage 2
-
 Customers now come in three types:
 
 | Type | Satisfaction lost per turn (waiting or seated before being served) | Observed price |
@@ -196,10 +194,6 @@ The run ended with:
 # Stage 3 Gameplay and Test Guide
 
 ## Restaurant Rush: Victory and Defeat Guide (Host, combo meals and Happy Hour)
-
-This guide is based on two reproducible Stage 3 runs of the `control/entities-stage3` branch at commit `0a1a2d0`. Both use **Game seed 42** and run all 18 turns. The successful run activates Happy Hour on turn 4 and ends in victory; the defeat run declines Happy Hour and has the Waiter wait every turn.
-
-## What is new in Stage 3
 
 The Host automatically seats the earliest waiting customer at the first free table, at most once per turn. The Waiter still has a separate action and may seat another customer. There is no Host choice prompt in this version.
 
