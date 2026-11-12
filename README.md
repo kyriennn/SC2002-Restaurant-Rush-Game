@@ -1,5 +1,17 @@
 # Restaurant Rush
 
+## Introduction (About Us)
+
+We are SCEE Group 4, the team behind the Restaurant Rush project. This README introduces our stage-by-stage features and gameplay, demo video and timestamps, and our AI history declarations.
+
+| Team Member | Student ID |
+|---|---|
+| Ong Yew Sien, Keane | U2521832D |
+| Lim Ki Rin | U2521121C |
+| Yeo Wei Xuan | U2521952H |
+| Chua Kai Wen | U2520568E |
+
+
 ## Stage 2 Customer Behaviour
 
 | Customer | Satisfaction loss per waiting turn | Bill |
@@ -46,7 +58,9 @@ remaining duration is displayed at the start of every turn.
 
 See the [Stages Gameplay and Test Guide](Restaurant_Rush_Blueprint.md).
 
-## Demo Video Timestamps
+## Demo Video and Timestamps
+
+[Demo video folder](demo/)
 
 | Segment to Show | Timestamp |
 |----------------|------------------|
