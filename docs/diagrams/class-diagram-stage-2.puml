@@ -1,0 +1,4 @@
+@startuml
+!$stage = 2
+!include class-diagram-common.puml
+@enduml
