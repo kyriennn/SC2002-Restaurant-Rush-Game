@@ -50,15 +50,16 @@ See the [Stages Gameplay and Test Guide](Restaurant_Rush_Blueprint.md).
 
 | Segment to Show | Timestamp |
 |----------------|------------------|
-| Launch from submitted project | `mm:ss` |
-| Manager decisions with constrained staff | `mm:ss` |
-| READY → SERVED → Payment workflow | `mm:ss` |
-| VIP or Critic behaviour | `mm:ss` |
-| Stage 3 feature (Combo Meals) | `mm:ss` |
-| Victory run | `mm:ss` |
-| Defeat run | `mm:ss` |
-| Stage comparisons and diagrams | `07:39` |
+| Launch from submitted project | `00:00–01:00` |
+| Manager decisions with constrained staff | `01:00–01:50` |
+| READY → SERVED → Payment workflow | `01:50–03:35` |
+| VIP or Critic behaviour | `03:35–04:00` |
+| Stage 3 feature (Combo Meals) | `04:00–05:42` |
+| Victory Run and Defeat run | `05:42–07:38` |
+| Stage comparisons and diagrams | `07:38–12:20` |
 
 ## AI History
 
   - [Yeo Wei Xuan - Stage 3 AI Declaration](https://github.com/kyriennn/SC2002-Restaurant-Rush-Game/blob/entities/ai-history/stage-3/README.md)
+  - [Chua Kai Wen – Stage 3 AI Declaration](https://github.com/kyriennn/SC2002-Restaurant-Rush-Game/blob/stage3/ai-history/stage-3/README.md)
+
