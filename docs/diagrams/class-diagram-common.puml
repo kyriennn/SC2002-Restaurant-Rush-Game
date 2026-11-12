@@ -1,0 +1,366 @@
+!pragma layout smetana
+title Restaurant Rush - Stage $stage Class Diagram
+
+top to bottom direction
+hide empty members
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 24
+skinparam ranksep 34
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam classFontSize 13
+skinparam classFontStyle bold
+skinparam packageFontStyle bold
+skinparam class {
+  BackgroundColor #F8FAFC
+  BorderColor #475569
+  ArrowColor #64748B
+}
+
+package "Application" #EEF2FF {
+  class Main {
+    {static} +main(args: String[]): void
+  }
+}
+
+package "boundaries" #EFF6FF {
+  class ControlUI <<boundary>> {
+    -inputReader: InputReader
+    -output: PrintStream
+    +showWelcome(seed: long): void
+    +showTurnStart(...): void
+    +askWaiterTask(options): MenuOption
+    +askChefTask(options): MenuOption
+    +showArrival(description: String): void
+    +showActionSucceeded(message: String): void
+    +showActionRejected(reason: String): void
+    +showTurnResults(...): void
+    +showFinalResult(...): void
+    !if ($stage >= 2)
+    +showArrival(id: int, type: String): void
+    !endif
+    !if ($stage >= 3)
+    +askHappyHourActivation(): boolean
+    +showTurnStart(..., remainingTurns: int, ...): void
+    !endif
+  }
+
+  class InputReader <<boundary>> {
+    -scanner: Scanner
+    -output: PrintStream
+    +readInt(prompt: String): int
+    +readChoice(prompt: String, count: int): int
+    +readLong(prompt: String): long
+    +readYesNo(prompt: String): boolean
+    +readNonBlank(prompt: String): String
+  }
+
+  class MenuOption <<value object>> {
+    -id: String
+    -label: String
+    +getId(): String
+    +getLabel(): String
+  }
+}
+
+package "control" #FFF7ED {
+  class ActionResult <<value object>> {
+    -success: boolean
+    -message: String
+    +isSuccess(): boolean
+    +getMessage(): String
+  }
+
+  class GameConfig <<configuration>> {
+    {static} +MAX_TURNS: int = 18
+    {static} +NUM_TABLES: int = 2
+    {static} +TARGET_PAID: int = 4
+    {static} +TARGET_REVENUE: int = 4500
+    {static} +TARGET_AVG_SATISFACTION: int = 60
+    -seed: long
+    +returnCustomerthisTurn(turn: int): Customer
+    +getSeed(): long
+  }
+
+  class TurnController <<controller>> {
+    -config: GameConfig
+    -restaurant: Restaurant
+    -ui: ControlUI
+    -rng: Random
+    -currentTurn: int
+    !if ($stage >= 3)
+    -happyHour: HappyHour
+    !endif
+    +run(): void
+    -playTurn(): void
+    -handleArrivals(): void
+    -waiterPhase(): void
+    -chefPhase(): void
+    -eatingAndPayment(): void
+    -endOfTurnDecay(): void
+    !if ($stage >= 3)
+    -activateHappyHourAtTurnStart(): void
+    -recoverDuringHappyHour(): void
+    -hostPhase(): void
+    !endif
+  }
+
+  class Restaurant <<controller>> {
+    -waitingQueue: Queue<Customer>
+    -activeOrders: List<Order>
+    -tables: List<Table>
+    -menu: List<MenuItem>
+    -waiter: Waiter
+    -chef: Chef
+    -cashier: Cashier
+    !if ($stage >= 3)
+    -host: Host
+    !endif
+    -revenueCents: int
+    -servedCount: int
+    -unhappyDepartures: int
+    +seatCustomer(c: Customer, t: Table): ActionResult
+    +takeOrder(c: Customer, rng: Random, turn: int): ActionResult
+    +advanceOrder(o: Order, turn: int): ActionResult
+    +serveOrder(o: Order, turn: int): ActionResult
+    +processPayment(c: Customer, turn: int): String
+    +processEndOfTurn(c: Customer): boolean
+    +getAverageSatisfaction(): OptionalDouble
+    !if ($stage >= 3)
+    +hostSeatCustomer(c: Customer, t: Table): ActionResult
+    +takeOrder(c, rng, turn, happyHour): ActionResult
+    +recoverWaitingCustomers(points: int): void
+    !endif
+  }
+
+  !if ($stage >= 3)
+  class HappyHour <<policy>> {
+    {static} +RECOVERY_POINTS: int = 15
+    -activationTurn: int
+    +canActivate(): boolean
+    +activate(turn: int): void
+    +isActive(turn: int): boolean
+    +getRemainingTurns(turn: int): int
+    +priceForOrder(priceCents: int, turn: int): int
+  }
+  !endif
+}
+
+package "entities" #F0FDF4 {
+  abstract class Staff <<entity>> {
+    -name: String
+    -actedThisTurn: boolean
+    +canAct(): boolean
+    +markActed(): void
+    +resetForNewTurn(): void
+  }
+
+  class Waiter <<entity>> {
+    +seatCustomer(c: Customer, t: Table): void
+    +takeOrder(c: Customer, item: MenuItem, turn: int): Order
+    +serve(c: Customer, turn: int): void
+  }
+
+  class Chef <<entity>> {
+    +prepareOneUnit(order: Order, turn: int): boolean
+  }
+
+  class Cashier <<entity>> {
+    +collectPayment(c: Customer, turn: int): int
+  }
+
+  !if ($stage >= 3)
+  class Host <<entity>> {
+    +seatCustomer(c: Customer, t: Table): void
+  }
+  !endif
+
+  abstract class Customer <<entity>> {
+    {static} -nextId: int
+    -customerId: int
+    -arrivalTurn: int
+    -satisfaction: int
+    -status: CustomerStatus
+    -order: Order
+    -table: Table
+    -servedTurn: int
+    -readyToPayTurn: int
+    -satisfactionAtPayment: int
+    {abstract} +getSatisfactionLoss(): int
+    +applyEndOfTurn(): boolean
+    +chooseMenuItem(menu, rng): MenuItem
+    +attachOrder(order: Order): void
+    +markSeated(table: Table): void
+    +markServed(turn: int): void
+    +finishEating(turn: int): boolean
+    +markPaid(turn: int): int
+    !if ($stage >= 2)
+    +getPriceCents(item: MenuItem): int
+    {abstract} +getTypeName(): String
+    !endif
+    !if ($stage >= 3)
+    +recoverSatisfaction(points: int): void
+    !endif
+  }
+
+  class RegularCustomer <<entity>> {
+    +getSatisfactionLoss(): int
+    !if ($stage >= 2)
+    +getTypeName(): String
+    !endif
+  }
+
+  !if ($stage >= 2)
+  class VIPCustomer <<entity>> {
+    +getSatisfactionLoss(): int
+    +getPriceCents(item: MenuItem): int
+    +getTypeName(): String
+  }
+
+  class CriticCustomer <<entity>> {
+    +getSatisfactionLoss(): int
+    +chooseMenuItem(menu, rng): MenuItem
+    +getTypeName(): String
+  }
+  !endif
+
+  class Table <<entity>> {
+    -tableNumber: int
+    -customer: Customer
+    +isOccupied(): boolean
+    +seatCustomer(c: Customer): void
+    +freeTable(): void
+  }
+
+  class MenuItem <<entity>> {
+    {static} +SALAD: MenuItem
+    {static} +BURGER: MenuItem
+    {static} +PASTA: MenuItem
+    -name: String
+    -priceCents: int
+    -preparationUnits: int
+    {static} +stageOneMenu(): List<MenuItem>
+    !if ($stage >= 3)
+    {static} +stageThreeMenu(): List<MenuItem>
+    !endif
+  }
+
+  !if ($stage >= 3)
+  class ComboMeal <<entity>> {
+    -first: MenuItem
+    -second: MenuItem
+    +getFirst(): MenuItem
+    +getSecond(): MenuItem
+  }
+  !endif
+
+  class Order <<entity>> {
+    {static} -generatedIds: int
+    -orderId: int
+    -customer: Customer
+    -menuItem: MenuItem
+    -priceCents: int
+    -requiredPreparationUnits: int
+    -completedPreparationUnits: int
+    -createdTurn: int
+    -readyTurn: int
+    -servedTurn: int
+    -paidTurn: int
+    -status: OrderStatus
+    +advancePreparation(turn: int): boolean
+    ~markServed(turn: int): void
+    ~markPaid(turn: int): void
+    +cancel(): void
+    !if ($stage >= 3)
+    +Order(customer, item, turn, chargedPriceCents)
+    !endif
+  }
+
+  enum CustomerStatus {
+    WAITING
+    SEATED
+    SERVED
+    READY_TO_PAY
+    PAID
+    LEFT
+  }
+
+  enum OrderStatus {
+    ORDERED
+    READY
+    SERVED
+    PAID
+    CANCELLED
+  }
+}
+
+package "util" #FAF5FF {
+  class MoneyFormatter <<utility>> {
+    {static} +format(amountInCents: int): String
+  }
+}
+
+' Inheritance
+Staff <|-- Waiter
+Staff <|-- Chef
+Staff <|-- Cashier
+Customer <|-- RegularCustomer
+!if ($stage >= 2)
+Customer <|-- VIPCustomer
+Customer <|-- CriticCustomer
+!endif
+!if ($stage >= 3)
+Staff <|-- Host
+MenuItem <|-- ComboMeal
+!endif
+
+' Ownership and associations
+ControlUI *-- InputReader
+ControlUI *-- MenuOption
+TurnController *-- GameConfig
+TurnController *-- Restaurant
+TurnController *-- ControlUI
+Restaurant *-- "2" Table
+Restaurant *-- "1" Waiter
+Restaurant *-- "1" Chef
+Restaurant *-- "1" Cashier
+Restaurant o-- "0..*" Customer : waiting queue
+Restaurant o-- "0..*" Order : active orders
+Restaurant o-- "3..*" MenuItem : menu
+Table --> "0..1" Customer : seats
+Customer --> CustomerStatus
+Customer o-- "0..1" Order
+Customer --> "0..1" Table
+Order --> "1" Customer
+Order --> "1" MenuItem
+Order --> OrderStatus
+
+' Dependencies
+Main ..> TurnController
+Main ..> GameConfig
+Main ..> ControlUI
+TurnController ..> ActionResult
+Restaurant ..> ActionResult
+ControlUI ..> MoneyFormatter
+Restaurant ..> MoneyFormatter
+GameConfig ..> Customer : creates
+!if ($stage >= 3)
+TurnController *-- HappyHour
+Restaurant *-- Host
+ComboMeal *-- "2" MenuItem : components
+Restaurant ..> HappyHour : pricing / recovery
+!endif
+
+legend right
+  |= Notation |= Meaning |
+  | <|-- | inheritance |
+  | *-- | composition / ownership |
+  | o-- | aggregation |
+  | --> | association |
+  | ..> | dependency |
+endlegend
+
