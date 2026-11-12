@@ -46,8 +46,6 @@ remaining duration is displayed at the start of every turn.
 
 See the [Stages Gameplay and Test Guide](Restaurant_Rush_Blueprint.md).
 
-##Video Timestamps
-
 ## Demo Video Timestamps
 
 | Segment to Show | Timestamp |
