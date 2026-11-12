@@ -20,6 +20,8 @@ public final class CriticCustomer extends Customer {
         return "Critic";
     }
 
+
+    /* Chooses the highest-priced menu item. If prices tie, chooses the first one in menu order. */
     @Override 
     public MenuItem chooseMenuItem(List<MenuItem> menu, Random rng){
         MenuItem best = menu.get(0);

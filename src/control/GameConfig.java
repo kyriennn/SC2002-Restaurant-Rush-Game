@@ -13,6 +13,7 @@ public class GameConfig {
     public final static int TARGET_PAID = 4;
     public final static int TARGET_REVENUE = 4500;  // take money as integer cents according to project brief
     public final static int TARGET_AVG_SATISFACTION = 60;
+    public final static int HAPPY_HOUR_RECOVERY = 15;
     //use Integer because Arrays library accepts Objects instead of primitive types
     private final static Integer[] TURNS = {1, 4, 7, 10, 13, 16};
     //counter to keep track of next customer id

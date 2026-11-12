@@ -3,13 +3,22 @@ package entities;
 import java.util.Arrays;
 import java.util.List;
 
-public final class MenuItem {
+public class MenuItem {
     public static final MenuItem SALAD = new MenuItem("Salad", 900, 1);
     public static final MenuItem BURGER = new MenuItem("Burger", 1500, 1);
     public static final MenuItem PASTA = new MenuItem("Pasta", 1800, 2);
 
+    //menu
     private static final List<MenuItem> STAGE_ONE_MENU =
             Arrays.asList(SALAD, BURGER, PASTA);
+    private static final List<MenuItem> STAGE_THREE_MENU =
+            Arrays.asList(
+                    SALAD,
+                    BURGER,
+                    PASTA,
+                    new ComboMeal(SALAD, BURGER),
+                    new ComboMeal(SALAD, PASTA),
+                    new ComboMeal(BURGER, PASTA));
 
     private final String name;
     private final int priceCents;
@@ -38,6 +47,10 @@ public final class MenuItem {
 
     public static List<MenuItem> stageOneMenu() {
         return STAGE_ONE_MENU;
+    }
+
+    public static List<MenuItem> stageThreeMenu() {
+        return STAGE_THREE_MENU;
     }
 
     public String getName() {

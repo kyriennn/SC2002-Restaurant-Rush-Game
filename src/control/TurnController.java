@@ -11,6 +11,7 @@ public class TurnController {
     private final Restaurant restaurant;
     private final ControlUI ui;
     private final Random rng;
+    private final HappyHour happyHour = new HappyHour();
 
     private int currentTurn = 0;
 
@@ -31,13 +32,54 @@ public class TurnController {
 
     private void playTurn(){
         resetStaff();
+        activateHappyHourAtTurnStart();
         handleArrivals();
-        ui.showTurnStart(currentTurn, GameConfig.MAX_TURNS, restaurant.getRevenueCents(), averageOrNull(), waitingQueueLine(), occupiedTableLine(), customerStateLine());
+        recoverDuringHappyHour();
+        ui.showTurnStart(
+                currentTurn,
+                GameConfig.MAX_TURNS,
+                restaurant.getRevenueCents(),
+                averageOrNull(),
+                happyHour.getRemainingTurns(currentTurn),
+                waitingQueueLine(),
+                occupiedTableLine(),
+                customerStateLine());
+        hostPhase();
         waiterPhase();
         chefPhase();
         eatingAndPayment();
         endOfTurnDecay();
         ui.showTurnResults(currentTurn, restaurant.getServedCount(), restaurant.getPaidCount(), restaurant.getUnhappyDepartures(), restaurant.getRevenueCents(), averageOrNull());
+    }
+
+    private void activateHappyHourAtTurnStart() {
+        if (happyHour.canActivate() && ui.askHappyHourActivation()) {
+            happyHour.activate(currentTurn);
+            ui.showEvent("Happy Hour is active for this turn and the next.");
+        }
+    }
+
+    private void recoverDuringHappyHour() {
+        if (happyHour.isActive(currentTurn)) {
+            restaurant.recoverWaitingCustomers(HappyHour.RECOVERY_POINTS);
+            ui.showEvent("Waiting and unserved customers recover 15 satisfaction.");
+        }
+    }
+
+    private void hostPhase() {
+        if (restaurant.getWaitingQueue().isEmpty()
+                || restaurant.getFreeTables().isEmpty()) {
+            return;
+        }
+
+        Customer customer = restaurant.getWaitingQueue().iterator().next();
+        Table table = restaurant.getFreeTables().get(0);
+        ActionResult result = restaurant.hostSeatCustomer(customer, table);
+        if (result.isSuccess()) {
+            ui.showActionSucceeded(result.getMessage());
+        } else {
+            ui.showActionRejected(result.getMessage());
+        }
     }
 
     private void resetStaff(){
@@ -67,7 +109,7 @@ public class TurnController {
 
         //take order method
         for(Customer c : restaurant.getSeatedWithoutOrder()){
-            actions.put(new MenuOption("ORDER " + c.getCustomerId(), "Take order from Customer " + c.getCustomerId()), ()-> restaurant.takeOrder(c, rng, currentTurn));
+            actions.put(new MenuOption("ORDER " + c.getCustomerId(), "Take order from Customer " + c.getCustomerId()), ()-> restaurant.takeOrder(c, rng, currentTurn, happyHour));
         }
 
         //serve method

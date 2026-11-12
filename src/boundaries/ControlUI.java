@@ -77,6 +77,26 @@ public final class ControlUI {
             List<String> waitingQueue,
             List<String> occupiedTables,
             List<String> customerStates) {
+        showTurnStart(
+                turnNumber,
+                maximumTurns,
+                revenueCents,
+                averagePaidSatisfaction,
+                0,
+                waitingQueue,
+                occupiedTables,
+                customerStates);
+    }
+
+    public void showTurnStart(
+            int turnNumber,
+            int maximumTurns,
+            int revenueCents,
+            Double averagePaidSatisfaction,
+            int happyHourRemainingTurns,
+            List<String> waitingQueue,
+            List<String> occupiedTables,
+            List<String> customerStates) {
 
         requireList(waitingQueue, "waitingQueue");
         requireList(occupiedTables, "occupiedTables");
@@ -97,6 +117,10 @@ public final class ControlUI {
                 "Average satisfaction of paid customers: "
                         + formatAverageSatisfaction(
                                 averagePaidSatisfaction));
+        output.println(
+                "Happy Hour remaining: "
+                        + happyHourRemainingTurns
+                        + " turn(s)");
 
         printList(
                 "Waiting queue",
@@ -112,6 +136,11 @@ public final class ControlUI {
                 "Customer status",
                 customerStates,
                 "(no active customers)");
+    }
+
+    public boolean askHappyHourActivation() {
+        return inputReader.readYesNo(
+                "Activate Happy Hour for this turn and the next? (Y/N): ");
     }
 
     public MenuOption askWaiterTask(

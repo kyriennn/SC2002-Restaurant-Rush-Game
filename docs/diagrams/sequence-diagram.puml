@@ -1,0 +1,192 @@
+@startuml
+' Restaurant Rush — Sequence diagram (Stage 2 behaviour: VIP pricing)
+' Scenario: VIP Customer 2 arrives on turn 4, is seated, orders, is served, eats and pays.
+' The manager's Chef choice on turn 5 decides how much satisfaction the VIP keeps.
+' Other customers are omitted for clarity.
+
+title Restaurant Rush — VIP customer from arrival to payment
+
+hide footbox
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 220
+skinparam ParticipantPadding 8
+skinparam BoxPadding 6
+
+actor Manager
+boundary ":ControlUI" as UI
+control ":TurnController" as TC
+control ":GameConfig" as GC
+control ":Restaurant" as R
+participant ":Waiter" as W
+participant ":Chef" as CH
+participant ":Cashier" as CA
+entity "t1:Table" as T
+entity "c2:VIPCustomer" as C
+entity "o2:Order" as O
+
+Manager -> TC : start game (Main calls run())
+TC -> UI : showWelcome(seed)
+
+loop currentTurn = 1 .. 18  (each iteration = playTurn(); only turns involving Customer 2 are shown)
+
+== Turn 4: arrival and seating ==
+
+TC -> W : resetForNewTurn()
+TC -> CH : resetForNewTurn()
+TC -> CA : resetForNewTurn()
+note right of CA : every turn
+
+TC -> GC : returnCustomerthisTurn(4)
+create C
+GC -> C : new VIPCustomer(4)
+GC --> TC : c2
+TC -> R : addToQueue(c2)
+TC -> UI : showArrival("Customer 2 (VIP)")
+TC -> UI : showTurnStart(turn, revenue, avg, queue, tables, states)
+
+group waiterPhase()
+  loop until a valid action succeeds or Manager chooses Wait
+    TC -> TC : buildWaiterOptions()
+    TC -> UI : askWaiterTask(options)
+    UI -> Manager : show numbered Waiter tasks
+    Manager -> UI : "Seat Customer 2 (VIP) at Table 1"
+    UI --> TC : choice
+    TC -> R : seatCustomer(c2, t1)
+    alt t1 is free and c2 is in the waiting queue
+      R -> T : seatCustomer(c2)
+      T -> C : markSeated(t1)
+      note right of C : status = SEATED
+      R --> TC : ActionResult(success)
+      TC -> W : markActed()
+      TC -> UI : showActionSucceeded(message)
+    else invalid choice
+      R --> TC : ActionResult(fail, reason)
+      TC -> UI : showActionRejected(reason)
+      note right of TC : staff task NOT used;\nloop asks again
+    end
+  end
+end
+
+group endOfTurnDecay()
+  TC -> R : processEndOfTurn(c2)
+  R -> C : applyEndOfTurn()
+  C -> C : getSatisfactionLoss()
+  note right of C : VIPCustomer overrides: 5\nsatisfaction 100 -> 95
+  C --> R : false (does not leave)
+end
+
+== Turn 5: order with VIP pricing, then cooking ==
+
+group waiterPhase()
+  TC -> UI : askWaiterTask(options)
+  Manager -> UI : "Take order from Customer 2 (VIP)"
+  UI --> TC : choice
+  TC -> R : takeOrder(c2, rng, 5)
+  R -> C : chooseMenuItem(menu, rng)
+  C --> R : Burger
+  create O
+  R -> O : new Order(c2, Burger, 5)
+  O -> C : getPriceCents(Burger)
+  note right of C : <b>Stage 2 behaviour</b>\nVIPCustomer overrides getPriceCents:\n1500 x 90% = 1350 cents ($13.50),\nlocked into the order
+  C --> O : 1350
+  R -> C : attachOrder(o2)
+  R --> TC : ActionResult(success, "Customer 2 ordered Burger")
+  TC -> W : markActed()
+end
+
+group chefPhase()  — manager choice changes the outcome
+  TC -> TC : buildChefOptions()
+  TC -> UI : askChefTask(options)
+  UI -> Manager : show numbered Chef tasks
+  alt Manager cooks Customer 2's Burger
+    Manager -> UI : "Cook Burger for Customer 2 (0/1 units done)"
+    UI --> TC : choice
+    TC -> R : advanceOrder(o2, 5)
+    R -> O : advancePreparation(5)
+    note right of O : 1/1 units -> status READY\nreadyTurn = 5
+    O --> R : true
+    R --> TC : ActionResult(success, "READY to serve")
+    TC -> CH : markActed()
+  else Manager cooks another order or waits
+    note over TC, O : o2 stays ORDERED, so it cannot be served on turn 6.\nc2 keeps losing 5 satisfaction every turn until served,\nso a lower satisfaction is recorded at payment and the\naverage-satisfaction target becomes harder to reach.
+  end
+end
+
+group endOfTurnDecay()
+  TC -> R : processEndOfTurn(c2)
+  R -> C : applyEndOfTurn()
+  note right of C : still SEATED (not yet served)\nsatisfaction 95 -> 90
+  C --> R : false
+end
+
+== Turn 6: serve (dish was READY before the Waiter acts) ==
+
+group waiterPhase()
+  TC -> UI : askWaiterTask(options)
+  Manager -> UI : "Serve Burger to Customer 2"
+  UI --> TC : choice
+  TC -> R : serveOrder(o2, 6)
+  alt o2 is READY and readyTurn < currentTurn
+    R -> C : markServed(6)
+    C -> O : markServed(6)
+    note right of O : status SERVED, servedTurn = 6
+    note right of C : status SERVED -> no further\nsatisfaction loss (stays 90)
+    R --> TC : ActionResult(success)
+    TC -> W : markActed()
+  end
+end
+
+== Turn 7: eating ==
+
+group eatingAndPayment()
+  TC -> R : getEatingCustomers()
+  R --> TC : [c2]
+  TC -> C : finishEating(7)
+  note right of C : 7 > servedTurn 6\n-> READY_TO_PAY, readyToPayTurn = 7
+  C --> TC : true
+  TC -> UI : showEvent("Customer 2 ... ready to pay")
+  TC -> R : getReadytoPayCustomers()
+  note right of TC : guard [readyToPayTurn < currentTurn] is false (7 < 7),\nso Customer 2 pays next turn at the earliest
+end
+
+== Turn 8: payment ==
+
+group eatingAndPayment()
+  TC -> R : getReadytoPayCustomers()
+  R --> TC : customers sorted oldest first
+  loop for each ready-to-pay customer (oldest first)
+    alt c.getReadyToPayTurn() < currentTurn
+      TC -> R : processPayment(c2, 8)
+      R -> C : markPaid(8)
+      C -> O : markPaid(8)
+      note right of O : status PAID
+      C --> R : 1350
+      R -> R : revenueCents += 1350\npaidSatisfactions.add(90)
+      R -> T : freeTable()
+      T -> C : releaseTable(t1)
+      R --> TC : "Customer 2 paid $13.50."
+      TC -> CA : markActed()
+      TC -> UI : showEvent(message)
+      break Cashier handles at most one payment per turn
+      end
+    end
+  end
+end
+
+end
+
+== After turn 18: result check ==
+
+TC -> TC : checkVictory()
+TC -> R : getPaidCount()
+TC -> R : getRevenueCents()
+TC -> R : getAverageSatisfaction()
+alt paid >= 4 and revenue >= 4500 cents and average >= 60
+  TC -> UI : showFinalResult(true, ...)
+  UI -> Manager : VICTORY
+else any target missed
+  TC -> UI : showFinalResult(false, ...)
+  UI -> Manager : DEFEAT
+end
+
+@enduml
