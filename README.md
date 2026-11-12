@@ -45,3 +45,22 @@ remaining duration is displayed at the start of every turn.
 ## Gameplay and Test Runs
 
 See the [Stages Gameplay and Test Guide](Restaurant_Rush_Blueprint.md).
+
+##Video Timestamps
+
+## Demo Video Timestamps
+
+| Segment to Show | Timestamp |
+|----------------|------------------|
+| Launch from submitted project | `mm:ss` |
+| Manager decisions with constrained staff | `mm:ss` |
+| READY → SERVED → Payment workflow | `mm:ss` |
+| VIP or Critic behaviour | `mm:ss` |
+| Stage 3 feature (Combo Meals) | `mm:ss` |
+| Victory run | `mm:ss` |
+| Defeat run | `mm:ss` |
+| Stage comparisons and diagrams | `07:39` |
+
+## AI History
+
+  - [Yeo Wei Xuan - Stage 3 AI Declaration](https://github.com/kyriennn/SC2002-Restaurant-Rush-Game/blob/entities/ai-history/stage-3/README.md)
