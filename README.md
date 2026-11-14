@@ -71,6 +71,7 @@ See the [Stages Gameplay and Test Guide](Restaurant_Rush_Blueprint.md).
 | Stage 3 feature (Combo Meals) | `04:00–05:42` |
 | Victory Run and Defeat run | `05:42–07:38` |
 | Stage comparisons and diagrams | `07:38–12:20` |
+| OOP SOLID Principles | `12:27–13:52` |
 
 ## AI History
 
